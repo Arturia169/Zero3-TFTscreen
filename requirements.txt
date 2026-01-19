@@ -5,3 +5,4 @@ requests
 psutil
 urllib3
 watchdog
+numpy
