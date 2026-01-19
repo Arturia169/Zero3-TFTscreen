@@ -108,9 +108,12 @@ TARGET_NAME = "CNY 2026"
 # 加密货币配置
 CRYPTO_SYMBOLS = ["BTCUSDT", "ETHUSDT", "DOGEUSDT"]
 
+# 获取当前脚本所在目录
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # Telegram配置
-TELEGRAM_CONFIG_FILE = "/root/screen/telegram_config.json"  # Telegram配置文件
-TELEGRAM_CHANNELS_FILE = "/root/screen/telegram_channels.json"  # 频道列表文件
+TELEGRAM_CONFIG_FILE = os.environ.get("TELEGRAM_CONFIG_PATH", os.path.join(BASE_DIR, "telegram_config.json"))  # Telegram配置文件
+TELEGRAM_CHANNELS_FILE = os.environ.get("TELEGRAM_CHANNELS_PATH", os.path.join(BASE_DIR, "telegram_channels.json"))  # 频道列表文件
 TELEGRAM_UPDATE_INTERVAL = 60  # 更新间隔（秒）
 
 # 夜间模式配置 (01:30-08:00)
@@ -159,7 +162,7 @@ TRACKING_WEB_PORT = 8080  # Web管理界面端口
 # B站直播监控配置
 BILIBILI_LIVE_API_URL = "https://uapis.cn/api/v1/social/bilibili/liveroom"
 BILIBILI_UPDATE_INTERVAL = 3600  # 1小时更新一次
-BILIBILI_DATA_FILE = "/tmp/bilibili_streamers.json"  # 主播数据存储
+BILIBILI_DATA_FILE = os.environ.get("BILIBILI_DATA_PATH", "/tmp/bilibili_streamers.json")  # 主播数据存储
 BILIBILI_SESSDATA = "f8f311b2%2C1782930150%2C5218a%2A11CjBHM5kN0mat4on-E4RobPSKdzVyfHkLA6wi5jqlO4ZmCBNfXK5wZTrzyh5VOwEzbXkSVkE3Y0V0SmpGcEVyNHIyak5wZ0hjYXpGd3lra2xvM1NjUHV5TW5XdUc5X05tT0hZVThZem9feFJJSTlqU3ROSXpjeUQ5c3VGanFWSUFRX1NfLTdfeEFRIIEC"
 
 # Beszel服务器监控配置
