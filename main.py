@@ -92,8 +92,11 @@ SPI_BUS = 1
 SPI_DEVICE = 0
 SPI_MAX_SPEED = 62500000  # 62.5MHz - ST7789最大支持速度
 
-# 代理配置（用于加密货币API）
-PROXIES = {"http": "http://192.168.5.100:7890", "https": "http://192.168.5.100:7890"}
+# 代理配置（支持环境变量）
+PROXIES = {
+    "http": os.environ.get("http_proxy", "http://192.168.5.100:7890"),
+    "https": os.environ.get("https_proxy", "http://192.168.5.100:7890")
+}
 
 # Bybit配置
 BYBIT_API_KEY = "onaDJGAOJfa8ZGjUeo"

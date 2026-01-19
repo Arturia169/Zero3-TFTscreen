@@ -17,3 +17,6 @@ services:
     network_mode: host
     environment:
       - TZ=Asia/Shanghai
+      - http_proxy=http://192.168.5.100:7890
+      - https_proxy=http://192.168.5.100:7890
+      - no_proxy=localhost,127.0.0.1
