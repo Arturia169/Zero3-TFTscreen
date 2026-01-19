@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+*.log
+/tmp/
+.env
+.venv
+bin/
+lib/
+share/
+pyvenv.cfg
+tracking_packages.json
+bilibili_streamers.json
+telegram_config.json
+telegram_channels.json
