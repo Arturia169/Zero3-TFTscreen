@@ -24,4 +24,4 @@ ENV PYTHONUNBUFFERED=1
 ENV DISPLAY_PAGES=7
 
 # 启动命令
-CMD ["python", "rili.py"]
+CMD ["python", "main.py"]
