@@ -1,0 +1,7 @@
+spidev
+Pillow
+zhdate
+requests
+psutil
+urllib3
+watchdog

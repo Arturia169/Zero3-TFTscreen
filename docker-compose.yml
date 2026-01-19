@@ -1,0 +1,19 @@
+services:
+  screen-app:
+    build: .
+    container_name: orangepi-screen
+    restart: always
+    # 硬件访问权限
+    privileged: true
+    devices:
+      - "/dev/spidev1.0:/dev/spidev1.0"
+      - "/dev/mem:/dev/mem"
+      - "/dev/gpiomem:/dev/gpiomem"
+    # 挂载配置和缓存（根据代码中的路径映射）
+    volumes:
+      - /tmp:/tmp
+      - .:/app
+    # 如果代码中需要特定的网络访问，可以添加
+    network_mode: host
+    environment:
+      - TZ=Asia/Shanghai
