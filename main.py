@@ -1,7 +1,7 @@
 #!/root/screen_test/bin/python
 """
 智能屏幕显示系统
-支持天气、GitHub监控、加密货币、日历等功能
+支持天气、加密货币、日历等功能
 """
 import time
 import spidev
@@ -1257,11 +1257,19 @@ def load_telegram_config() -> Dict:
     return {"api_id": 0, "api_hash": ""}
 
 
-def save_telegram_config(api_id: int, api_hash: str) -> None:
-    """保存Telegram API配置"""
+def save_telegram_config(api_id: int, api_hash: str, bot_token: str = "") -> None:
+    """保存Telegram配置（支持 Bot Token）"""
     try:
+        config_data = {}
+        if bot_token:
+            # 使用 Bot Token 模式
+            config_data = {"bot_token": bot_token}
+        else:
+            # 旧的 API ID/Hash 模式（保留兼容性）
+            config_data = {"api_id": api_id, "api_hash": api_hash}
+        
         with open(TELEGRAM_CONFIG_FILE, 'w', encoding='utf-8') as f:
-            json.dump({"api_id": api_id, "api_hash": api_hash}, f, ensure_ascii=False, indent=2)
+            json.dump(config_data, f, ensure_ascii=False, indent=2)
     except Exception as e:
         logger.error(f"保存Telegram配置失败: {e}")
 
@@ -2058,28 +2066,22 @@ def tracking_web_worker() -> None:
             
             elif path == '/api/telegram/config':
                 config = load_telegram_config()
-                # 隐藏部分api_hash
-                api_hash = config.get("api_hash", "")
-                if len(api_hash) > 8:
-                    api_hash = api_hash[:4] + "****" + api_hash[-4:]
+                # 隐藏部分 bot_token
+                bot_token = config.get("bot_token", "")
+                if len(bot_token) > 20:
+                    bot_token = bot_token[:10] + "****" + bot_token[-10:]
                 self.send_json({
-                    "api_id": config.get("api_id", 0),
-                    "api_hash_masked": api_hash,
-                    "configured": bool(config.get("api_id") and config.get("api_hash"))
+                    "bot_token_masked": bot_token,
+                    "configured": bool(config.get("bot_token"))
                 })
             
             elif path == '/api/telegram/config/save':
-                api_id = query.get('api_id', [''])[0].strip()
-                api_hash = query.get('api_hash', [''])[0].strip()
-                if api_id and api_hash:
-                    try:
-                        api_id_int = int(api_id)
-                        save_telegram_config(api_id_int, api_hash)
-                        self.send_json({"success": True, "message": "Telegram API配置已保存，重启服务后生效"})
-                    except ValueError:
-                        self.send_json({"success": False, "message": "API ID必须是数字"}, 400)
+                bot_token = query.get('bot_token', [''])[0].strip()
+                if bot_token:
+                    save_telegram_config(0, "", bot_token)  # 保存 bot_token
+                    self.send_json({"success": True, "message": "Telegram Bot Token 已保存"})
                 else:
-                    self.send_json({"success": False, "message": "API ID和Hash不能为空"}, 400)
+                    self.send_json({"success": False, "message": "Bot Token 不能为空"}, 400)
             
             else:
                 self.send_response(404)
@@ -2189,14 +2191,13 @@ WEB_MANAGER_HTML = '''<!DOCTYPE html>
         
         <div id="telegram-panel" class="panel">
             <div class="section">
-                <div class="section-title">Telegram API配置</div>
+                <div class="section-title">Telegram Bot 配置</div>
                 <div id="tg-config-status" style="margin-bottom:8px"></div>
                 <div class="form-row">
-                    <input type="text" id="tg-api-id" placeholder="API ID (数字)">
-                    <input type="text" id="tg-api-hash" placeholder="API Hash">
+                    <input type="text" id="tg-bot-token" placeholder="Bot Token (从 @BotFather 获取)" style="flex:3">
                     <button style="background:#0088cc" onclick="saveTgConfig()">保存</button>
                 </div>
-                <div class="hint">从 <a href="https://my.telegram.org" target="_blank" style="color:#58a6ff">my.telegram.org</a> 获取API ID和Hash，保存后需重启服务</div>
+                <div class="hint">从 <a href="https://t.me/BotFather" target="_blank" style="color:#58a6ff">@BotFather</a> 创建 Bot 并获取 Token，无需登录验证</div>
             </div>
             <div class="section">
                 <div class="section-title">添加Telegram频道</div>
@@ -2359,24 +2360,22 @@ WEB_MANAGER_HTML = '''<!DOCTYPE html>
                 const data = await resp.json();
                 const el = document.getElementById('tg-config-status');
                 if (data.configured) {
-                    el.innerHTML = `<div style="color:#2ea043">已配置 · API ID: ${data.api_id} · Hash: ${data.api_hash_masked}</div>`;
+                    el.innerHTML = `<div style="color:#2ea043">已配置Bot · Token: ${data.bot_token_masked}</div>`;
                 } else {
-                    el.innerHTML = '<div style="color:#da3633">未配置 - 请填写API ID和Hash</div>';
+                    el.innerHTML = '<div style="color:#da3633">未配置 - 请填写Bot Token</div>';
                 }
             } catch (e) { document.getElementById('tg-config-status').innerHTML = '<div style="color:#da3633">加载失败</div>'; }
         }
         
         async function saveTgConfig() {
-            const apiId = document.getElementById('tg-api-id').value.trim();
-            const apiHash = document.getElementById('tg-api-hash').value.trim();
-            if (!apiId || !apiHash) { alert('请填写API ID和Hash'); return; }
+            const botToken = document.getElementById('tg-bot-token').value.trim();
+            if (!botToken) { alert('请填写Bot Token'); return; }
             try {
-                const resp = await fetch(`/api/telegram/config/save?api_id=${encodeURIComponent(apiId)}&api_hash=${encodeURIComponent(apiHash)}`);
+                const resp = await fetch(`/api/telegram/config/save?bot_token=${encodeURIComponent(botToken)}`);
                 const data = await resp.json();
                 alert(data.message);
                 if (data.success) { 
-                    document.getElementById('tg-api-id').value = ''; 
-                    document.getElementById('tg-api-hash').value = ''; 
+                    document.getElementById('tg-bot-token').value = ''; 
                     loadTgConfig(); 
                 }
             } catch (e) { alert('保存失败'); }
