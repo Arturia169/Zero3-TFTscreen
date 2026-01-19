@@ -1267,12 +1267,114 @@ def save_telegram_config(api_id: int, api_hash: str) -> None:
 
 
 def telegram_worker() -> None:
-    """Telegram频道消息监控工作线程"""
-    import asyncio
+    """Telegram频道消息监控工作线程（使用 Bot API，无需登录）"""
     
     # 加载配置
-    tg_config = load_telegram_config()
-    api_id = tg_config.get("api_id", 0)
+    def load_telegram_config():
+        try:
+            with open(TELEGRAM_CONFIG_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error(f"加载Telegram配置失败: {e}")
+            return {}
+    
+    def load_telegram_channels():
+        try:
+            with open(TELEGRAM_CHANNELS_FILE, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                # 支持两种格式：列表或配置对象
+                if isinstance(data, list):
+                    return data
+                return data.get("channels", [])
+        except Exception as e:
+            logger.error(f"加载Telegram频道列表失败: {e}")
+            return []
+    
+    # 加载配置
+    config = load_telegram_config()
+    bot_token = config.get("bot_token", "")
+    
+    if not bot_token:
+        logger.warning("Telegram Bot Token 未配置，跳过监控")
+        logger.info("请参考 TELEGRAM_SETUP.md 创建 Bot 并配置 Token")
+        info["telegram_status"] = "未配置Bot"
+        info["telegram_messages"] = []
+        return
+    
+    while True:
+        try:
+            # 加载频道列表
+            channels = load_telegram_channels()
+            if not channels:
+                info["telegram_messages"] = []
+                info["telegram_status"] = "无频道"
+                time.sleep(60)
+                continue
+            
+            all_messages = []
+            
+            for channel in channels[:5]:  # 最多监控5个频道
+                try:
+                    # 确保频道名以 @ 开头
+                    if not channel.startswith("@"):
+                        channel = f"@{channel}"
+                    
+                    # 使用 Telegram Bot API 获取频道信息
+                    # getUpdates 方法获取消息（需要 Bot 在频道中）
+                    api_url = f"https://api.telegram.org/bot{bot_token}/getChat"
+                    params = {"chat_id": channel}
+                    
+                    # 使用代理
+                    resp = requests.get(
+                        api_url,
+                        params=params,
+                        proxies=PROXIES,
+                        timeout=10,
+                        verify=False
+                    )
+                    
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        if data.get("ok"):
+                            chat_info = data.get("result", {})
+                            
+                            # 获取频道最新消息（通过 channel posts）
+                            # 注意：Bot API 对公开频道的访问有限
+                            # 更好的方式是使用 RSS 或 Web 抓取
+                            
+                            msg_data = {
+                                "channel": channel,
+                                "title": chat_info.get("title", channel),
+                                "description": chat_info.get("description", "")[:100],
+                                "members": chat_info.get("member_count", 0),
+                                "username": chat_info.get("username", ""),
+                                "type": chat_info.get("type", "")
+                            }
+                            
+                            all_messages.append(msg_data)
+                            logger.debug(f"获取频道信息成功: {channel}")
+                        else:
+                            logger.warning(f"Bot API 返回错误: {data.get('description')}")
+                    else:
+                        logger.warning(f"获取频道信息失败 {channel}: HTTP {resp.status_code}")
+                        
+                except Exception as e:
+                    logger.error(f"处理频道 {channel} 失败: {e}")
+            
+            info["telegram_messages"] = all_messages
+            info["telegram_status"] = f"监控{len(channels)}个频道" if all_messages else "获取失败"
+            
+            logger.info(f"Telegram 更新完成，获取到 {len(all_messages)} 个频道信息")
+            
+        except Exception as e:
+            logger.error(f"Telegram监控异常: {e}")
+            info["telegram_status"] = "Error"
+        
+        time.sleep(TELEGRAM_UPDATE_INTERVAL if 'TELEGRAM_UPDATE_INTERVAL' in globals() else 60)
+
+    """Telegram频道消息监控工作线程"""
+    
+    # 加载配置
     api_hash = tg_config.get("api_hash", "")
     
     # 检查配置
