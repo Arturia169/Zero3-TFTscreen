@@ -1328,7 +1328,6 @@ def telegram_worker() -> None:
                         channel = f"@{channel}"
                     
                     # 使用 Telegram Bot API 获取频道信息
-                    # getUpdates 方法获取消息（需要 Bot 在频道中）
                     api_url = f"https://api.telegram.org/bot{bot_token}/getChat"
                     params = {"chat_id": channel}
                     
@@ -1346,15 +1345,12 @@ def telegram_worker() -> None:
                         if data.get("ok"):
                             chat_info = data.get("result", {})
                             
-                            # 获取频道最新消息（通过 channel posts）
-                            # 注意：Bot API 对公开频道的访问有限
-                            # 更好的方式是使用 RSS 或 Web 抓取
-                            
+                            # 构造消息格式（Bot API 无法直接获取消息，只能获取频道信息）
+                            # 显示频道的描述作为"消息"
                             msg_data = {
-                                "channel": channel,
-                                "title": chat_info.get("title", channel),
-                                "description": chat_info.get("description", "")[:100],
-                                "members": chat_info.get("member_count", 0),
+                                "channel": chat_info.get("title", channel),
+                                "text": chat_info.get("description", "公开频道")[:80] or "公开频道",
+                                "time": f"成员: {chat_info.get('member_count', 0)}",
                                 "username": chat_info.get("username", ""),
                                 "type": chat_info.get("type", "")
                             }
