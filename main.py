@@ -27,6 +27,7 @@ from datetime import datetime, timedelta
 
 # 导入新的模块化 Worker
 from screen.workers.system import SystemWorker
+from screen.workers.weather import WeatherWorker
 
 # 配置热加载
 try:
@@ -4297,13 +4298,25 @@ def main() -> None:
     
     try:
         # 启动所有后台工作线程
-    # 使用新的 SystemWorker 模块
-        system_worker_instance = SystemWorker(info, SYSTEM_UPDATE_INTERVAL, logger)
-        system_worker_instance.start()
+    # 使用新的模块化 Worker
+    system_worker_instance = SystemWorker(info, SYSTEM_UPDATE_INTERVAL, logger)
+    system_worker_instance.start()
     
-        workers = [
-            threading.Thread(target=weather_worker, daemon=True, name="WeatherWorker"),
-            # threading.Thread(target=system_worker, daemon=True, name="SystemWorker"),  # 已迁移到模块
+    # 创建配置对象（简化版，传递必要参数）
+    class SimpleConfig:
+        def get(self, key, default=None):
+            config_map = {
+                "weather.api_key": QWEATHER_KEY,
+                "weather.city_id": CITY_ID
+            }
+            return config_map.get(key, default)
+    
+    weather_worker_instance = WeatherWorker(info, WEATHER_UPDATE_INTERVAL, SimpleConfig(), logger)
+    weather_worker_instance.start()
+    
+    workers = [
+        # threading.Thread(target=weather_worker, daemon=True, name="WeatherWorker"),  # 已迁移到模块
+        # threading.Thread(target=system_worker, daemon=True, name="SystemWorker"),  # 已迁移到模块
             threading.Thread(target=crypto_worker, daemon=True, name="CryptoWorker"),
             threading.Thread(target=tracking_worker, daemon=True, name="TrackingWorker"),
             threading.Thread(target=bilibili_worker, daemon=True, name="BilibiliWorker"),
