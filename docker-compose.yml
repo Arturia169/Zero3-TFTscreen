@@ -13,7 +13,6 @@ services:
       - "/dev/gpiomem:/dev/gpiomem"
     volumes:
       - /tmp:/tmp
-      - .:/app
     network_mode: host
     environment:
       - TZ=Asia/Shanghai
