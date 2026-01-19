@@ -2558,7 +2558,14 @@ def button_monitor_strict() -> None:
 # ================= 5. 绘图函数 =================
 # 字体初始化
 font_path = "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc"
-nixie_font_path = "/root/screen/fonts/reNix-Regular.otf"
+# 优先尝试容器内预备的字体路径，如果不存在则回退
+if not os.path.exists(font_path):
+    font_path = os.path.join(BASE_DIR, "fonts", "wqy-zenhei.ttc")
+    if not os.path.exists(font_path):
+        # 最后的兜底：通用的 Linux 中文字体路径
+        font_path = "/usr/share/fonts/truetype/wqy-zenhei/wqy-zenhei.ttc"
+
+nixie_font_path = os.path.join(BASE_DIR, "fonts", "reNix-Regular.otf")
 
 try:
     f_nixie = ImageFont.truetype(font_path, 65) 
@@ -3150,7 +3157,7 @@ def draw_clock() -> Image.Image:
     
     # ========== 2. 加载辉光管素材图片 ==========
     nixie_images = {}
-    nixie_dir = "/root/screen/辉光管素材图"  # 素材目录路径
+    nixie_dir = os.path.join(BASE_DIR, "辉光管素材图")  # 素材目录路径
     tube_target_h = 110  # 目标高度
     width_scale = 1.45  # 宽度拉伸比例
     
