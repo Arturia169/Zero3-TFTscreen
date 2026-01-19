@@ -1,5 +1,6 @@
 services:
   screen-app:
+    image: ghcr.io/arturia169/zero3-tftscreen:main
     build: .
     container_name: orangepi-screen
     restart: always
