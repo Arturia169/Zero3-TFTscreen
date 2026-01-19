@@ -1,0 +1,80 @@
+# 香橙派屏幕项目 - 默认配置
+
+# 天气配置
+weather:
+  api_key: "04cdddbc959545bb89dd599ce28e0cb7"
+  city_id: "101130601"
+  update_interval: 1800  # 30分钟
+
+# 硬件配置
+hardware:
+  display:
+    width: 320
+    height: 240
+    dc_pin: "75"
+    rst_pin: "79"
+    cs_pin: "233"
+  spi:
+    bus: 1
+    device: 0
+    max_speed: 62500000  # 62.5MHz
+  button:
+    pin: "70"  # PC6引脚
+    enabled: false  # 默认禁用（硬件问题）
+
+# 代理配置
+proxy:
+  http: "http://192.168.5.100:7890"
+  https: "http://192.168.5.100:7890"
+
+# Bybit API 配置
+bybit:
+  api_key: "onaDJGAOJfa8ZGjUeo"
+  secret: "NU0v7kpv1Wr2eZQFMeHfFtMhXgH2ScTnolZj"
+
+# 加密货币配置
+crypto:
+  symbols: ["BTCUSDT", "ETHUSDT", "DOGEUSDT"]
+  update_interval: 15  # 秒
+
+# 系统监控配置
+system:
+  update_interval: 2  # 秒
+
+# 显示配置
+display:
+  pages: 7
+  refresh_interval: 1.0  # 秒
+  night_mode:
+    enabled: true
+    start_hour: 1
+    start_minute: 30
+    end_hour: 8
+    end_minute: 0
+    brightness_factor: 0.3
+  auto_switch:
+    enabled: false
+    interval: 10  # 秒
+
+# 日志配置
+logging:
+  level: "INFO"
+  file: "/tmp/rili_screen.log"
+  max_size: 5242880  # 5MB
+  backup_count: 2
+
+# Beszel 监控配置
+beszel:
+  api_url: "http://192.168.5.100:8090"
+  email: "169hanser@gmail.com"
+  password: "ljl2001."
+  update_interval: 60  # 秒
+
+# Web 管理界面配置
+web:
+  port: 8080
+  host: "0.0.0.0"
+
+# 远程控制配置
+control:
+  udp_port: 9998
