@@ -12,3 +12,7 @@ tracking_packages.json
 bilibili_streamers.json
 telegram_config.json
 telegram_channels.json
+
+# 备份文件
+main_old_backup.py
+rili.py
