@@ -25,6 +25,9 @@ from PIL import Image, ImageDraw, ImageFont, ImageEnhance
 from zhdate import ZhDate
 from datetime import datetime, timedelta
 
+# 导入新的模块化 Worker
+from screen.workers.system import SystemWorker
+
 # 配置热加载
 try:
     from watchdog.observers import Observer
@@ -34,6 +37,7 @@ except ImportError:
     WATCHDOG_AVAILABLE = False
     Observer = None
     FileSystemEventHandler = object
+    logger.warning("watchdog 库未安装，配置热加载不可用")
 
 # 禁用SSL警告
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -4292,10 +4296,14 @@ def main() -> None:
     sys.stdout.flush()
     
     try:
-        # 启动后台工作线程
+        # 启动所有后台工作线程
+    # 使用新的 SystemWorker 模块
+        system_worker_instance = SystemWorker(info, SYSTEM_UPDATE_INTERVAL, logger)
+        system_worker_instance.start()
+    
         workers = [
             threading.Thread(target=weather_worker, daemon=True, name="WeatherWorker"),
-            threading.Thread(target=system_worker, daemon=True, name="SystemWorker"),
+            # threading.Thread(target=system_worker, daemon=True, name="SystemWorker"),  # 已迁移到模块
             threading.Thread(target=crypto_worker, daemon=True, name="CryptoWorker"),
             threading.Thread(target=tracking_worker, daemon=True, name="TrackingWorker"),
             threading.Thread(target=bilibili_worker, daemon=True, name="BilibiliWorker"),
